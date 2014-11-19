@@ -11,22 +11,23 @@ int main(int argc, char *argv[]) {
   // initialize the 0MQ context
   zmqpp::context context;
 
-  // generate a push socket
+  // generate a subscribe socket
   zmqpp::socket_type type = zmqpp::socket_type::subscribe;
   zmqpp::socket socket (context, type);
-  zmqpp::socket_option option = zmqpp::socket_option::subscribe;
 
+  // set socket option to subscribe all
+  zmqpp::socket_option option = zmqpp::socket_option::subscribe;
   socket.set(option, "");
+
   // open the connection
   cout << "Opening connection to " << endpoint << "..." << endl;
   socket.connect(endpoint);
 
-  // send a message
-  cout << "Sending text and a number..." << endl;
-  zmqpp::message message;
+  // Prepare to receive a message
+  cout << "Beginning receive loop..." << endl;
   string text;
-  // compose a message from a string and a number
 
+  // Loop receiving and printing messages
   while(true){
     socket.receive(text);
   
