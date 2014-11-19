@@ -5,4 +5,4 @@ zmq_client:
 	g++ $(CXXFLAGS) zmq_client.cpp -o client $(LDLIBS)
 
 mysqlclient:
-	g++ $(CXXFLAGS) standalone_example.cpp -o mysql_client $(LDLIBS)
+	g++ $(CXXFLAGS) mysql_example.cpp -o mysql_client $(LDLIBS)
