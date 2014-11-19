@@ -1,76 +1,10 @@
-/*
-Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
-
-The MySQL Connector/C++ is licensed under the terms of the GPLv2
-<http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most
-MySQL Connectors. There are special exceptions to the terms and
-conditions of the GPLv2 as it is applied to this software, see the
-FLOSS License Exception
-<http://www.mysql.com/about/legal/licensing/foss-exception.html>.
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published
-by the Free Software Foundation; version 2 of the License.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
-*/
-
-
-
-/**
-* Basic example of creating a stand alone program linked against Connector/C++
-*
-* This example is not integrated into the Connector/C++ build environment.
-* You must run "make install" prior to following the build instructions
-* given here.
-*
-* To compile the standalone example on Linux try something like:
-*
-* /usr/bin/c++
-*   -o standalone
-*   -I/usr/local/include/cppconn/
-*   -Wl,-Bdynamic -lmysqlcppconn
-*    examples/standalone_example.cpp
-*
-* To run the example on Linux try something similar to:
-*
-*  LD_LIBRARY_PATH=/usr/local/lib/ ./standalone
-*
-* or:
-*
-*  LD_LIBRARY_PATH=/usr/local/lib/ ./standalone host user password database
-*
-*/
-
-
 /* Standard C++ includes */
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-
-/*
-  Include directly the different
-  headers from cppconn/ and mysql_driver.h + mysql_util.h
-  (and mysql_connection.h). This will reduce your build time!
-*/
-#include "mysql_connection.h"
-#include "mysql_driver.h"
-#include "examples.h"
-
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-
+#include "headers.h"
 #define EXAMPLE_HOST "tcp://127.0.0.1:3306"
 #define EXAMPLE_USER "root"
 #define EXAMPLE_PASS ""
@@ -97,15 +31,13 @@ int main(int argc, const char **argv)
 		/* Using the Driver to create a connection */
 		std::auto_ptr< sql::Connection > con(driver->connect(url, user, pass));
 		con->setSchema(database);
+                
+                // Prepare dynamic insertion statement 
+                std::auto_ptr< sql::PreparedStatement > pStmt(con->prepareStatement("INSERT into t1(number,content) VALUES (?, ?)"));
 
-		std::auto_ptr< sql::Statement > stmt(con->createStatement());
-		std::auto_ptr< sql::ResultSet > res(stmt->executeQuery("SELECT 'Welcome to Connector/C++' AS _message"));
-		cout << "\t... running 'SELECT 'Welcome to Connector/C++' AS _message'" << endl;
-		while (res->next()) {
-			cout << "\t... MySQL replies: " << res->getString("_message") << endl;
-			cout << "\t... say it again, MySQL" << endl;
-			cout << "\t....MySQL replies: " << res->getString(1) << endl;
-		}
+                pStmt->setInt(1,2);
+                pStmt->setString(2,"b");
+                pStmt->execute();
 
 	} catch (sql::SQLException &e) {
 		/*
