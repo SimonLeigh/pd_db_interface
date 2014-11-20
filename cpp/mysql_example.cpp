@@ -5,6 +5,8 @@
 #include <stdexcept>
 
 #include "headers.h"
+#include "zmq"
+
 #define EXAMPLE_HOST "tcp://127.0.0.1:3306"
 #define EXAMPLE_USER "root"
 #define EXAMPLE_PASS ""

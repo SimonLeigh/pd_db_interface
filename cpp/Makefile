@@ -9,3 +9,9 @@ mysqlclient:
 
 test:
 	g++ $(CXXFLAGS) test.cpp pd_zmq_client.cpp pd_db_connector.cpp -o test $(LDLIBS) 
+
+interface:
+	g++ $(CXXFLAGS) db_interface.cpp pd_zmq_client.cpp pd_db_connector.cpp -o interface $(LDLIBS)  
+
+clean:
+	rm -rf *.o test interface zmq_client mysql_client

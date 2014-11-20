@@ -32,7 +32,7 @@ int PDDBConnector::sendUpdate(std::vector<double> &values){
 
   /* Iterate vector and set pStmt values */
   for(unsigned int i=0; i < values.size(); i++){
-    this->pStmt->setDouble(i, values[i]);
+    this->pStmt->setDouble(i+1, values[i]);
   }
 
   /* Commit to DB */
