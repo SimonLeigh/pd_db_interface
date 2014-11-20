@@ -1,0 +1,14 @@
+#include <zmqpp/zmqpp.hpp>
+#include <string>
+#include <iostream>
+
+class PowerDataConnector {
+public:
+  PowerDataConnector(const std::string endpoint);
+  bool connect();
+private:
+  zmqpp::context context;
+  zmqpp::socket_type type;
+  zmqpp::socket socket;
+}
+  
