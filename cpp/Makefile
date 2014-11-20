@@ -6,3 +6,6 @@ zmq_client:
 
 mysqlclient:
 	g++ $(CXXFLAGS) mysql_example.cpp -o mysql_client $(LDLIBS)
+
+test:
+	g++ $(CXXFLAGS) test.cpp pd_zmq_client.cpp pd_db_connector.cpp -o test $(LDLIBS) 
