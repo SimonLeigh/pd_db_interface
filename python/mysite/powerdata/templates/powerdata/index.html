@@ -1,0 +1,9 @@
+{% if latest_measurement_list %}
+    <ul>
+    {% for measurement in latest_measurement_list %}
+        <li><a href="{% url 'detail' measurement.unix_time %}"> {{ measurement }} </a> </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No measurements are available.</p>
+{% endif %}
