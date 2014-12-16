@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from powerdata.models import SCPMmeasurement
 from django.core import serializers
-import json
+import json, datetime, time, math
 
 # Create your views here.
 
@@ -35,6 +35,8 @@ def latest(request, n_records=''):
     if n_records == '':
         n_records = 1
     try:
+        if n_records >= 10000:
+            n_records = 10000
         measurement = SCPMmeasurement.objects.order_by('-unix_time')[:n_records]
         # Serialize 'list'
         data = serializers.serialize('json', measurement)
@@ -48,25 +50,57 @@ def latest(request, n_records=''):
         raise Http404
     return HttpResponse(data, content_type='application/json')
 
-def piechart(request):
-    #template = loader.get_template('powerdata/piechart/html')
-    xdata = ["Apple", "Apricot", "Avocado", "Banana",
-             "Boysenberries", "Blueberries", "Dates",
-             "Grapefruit", "Kiwi", "Lemon"]
-    ydata = [52, 48, 169, 94, 75, 71, 490, 82, 46, 17]
-    chartdata = {'x': xdata, 'y': ydata}
-    charttype = "pieChart"
-    chartcontainer = 'piechart_container'
+def latest_chart(request, hours=1):
+    """
+    linewithfocuschart page
+    """
+    '''
+    The rest of this is basically to stop the query
+    being super slow as a result of getting tonnes of records.
+    We can't plot more than ~ 5000 records anyway without the
+    graph being too slow, so we get every $hour record in our
+    range which reduces the size of the returned dataset massively.
+    '''
+    hours = int(hours)
+    # Convert to number of records
+    n_records = 3600*hours
+    # Set up initial filter
+    measurements = SCPMmeasurement.objects.filter(unix_time__gte=time.time()-n_records)
+    # Extra query for mysql which retrieves only every $hours entry
+    measurements = measurements.extra(where=['ROUND(unix_time) %% {0:d} = 0'.format(hours)])
+
+    # Populate data. It's only now (when we iterate) that the query executes.
+    xdata = [float(x.unix_time) * 1000 for x in measurements]
+    ydata = [float(x.active_power) for x in measurements]
+    ydata2 = [float(x.apparent_power) for x in measurements]
+    ydata3 = [float(x.voltage) for x in measurements]
+
+    tooltip_date = "%d %b %Y %H:%M:%S %p"
+    extra_serie_act = {"tooltip": {"y_start": "Value is ", "y_end": " W"},
+                   "date_format": tooltip_date}
+    extra_serie_app = {"tooltip": {"y_start": "Value is ", "y_end": " VA"},
+                       "date_format": tooltip_date}
+    extra_serie_V = {"tooltip": {"y_start": "Value is ", "y_end": " V"},
+                       "date_format": tooltip_date}
+    chartdata = {
+        'x': xdata,
+        'name1': 'Active Power', 'y1': ydata, 'extra1': extra_serie_act,
+        'name2': 'Apparent Power', 'y2': ydata2, 'extra2': extra_serie_app,
+        'name3': 'Voltage', 'y3': ydata3, 'extra3': extra_serie_V
+    }
+    charttype = "lineWithFocusChart"
+    chartcontainer = 'linewithfocuschart_container'  # container name
     data = {
         'charttype': charttype,
         'chartdata': chartdata,
         'chartcontainer': chartcontainer,
         'extra': {
-            'x_is_date': False,
-            'x_axis_format': '',
+            'x_is_date': True,
+            'x_axis_format': '%d %b %H:%M',
             'tag_script_js': True,
-            'jquery_on_ready': False,
+            'jquery_on_ready': True,
         }
     }
-    return render_to_response('powerdata/piechart.html', data)
+    return render_to_response('powerdata/linewithfocuschart.html', data)
+
 
