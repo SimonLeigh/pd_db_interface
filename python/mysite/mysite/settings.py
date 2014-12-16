@@ -111,4 +111,6 @@ BOWER_PATH = '/usr/bin/bower'
 BOWER_INSTALLED_APPS = (
     'jquery',
     'underscore',
+    'd3#3.3.13',
+    'nvd3',
 )
