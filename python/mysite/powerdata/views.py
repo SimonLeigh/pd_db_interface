@@ -38,8 +38,9 @@ def latest(request, n_records=''):
         if n_records >= 10000:
             n_records = 10000
         measurement = SCPMmeasurement.objects.order_by('-unix_time')[:n_records]
+        measurement = [obj.as_dict() for obj in measurement]
         # Serialize 'list'
-        data = serializers.serialize('json', measurement)
+        data = json.dumps(measurement)
         # Pack list
         struct = json.loads(data)
         if n_records == 1:
@@ -104,3 +105,8 @@ def latest_chart(request, hours=1):
     return render_to_response('powerdata/linewithfocuschart.html', data)
 
 
+def livechart(request):
+    # get last minute of data initially
+    initial_data = [obj.as_dict() for obj in SCPMmeasurement.objects.order_by('-unix_time')[:60]]
+    initial_data = json.dumps(initial_data)
+    return render(request, 'powerdata/livechart.html', {"my_data": initial_data})

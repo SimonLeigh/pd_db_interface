@@ -35,5 +35,13 @@ class SCPMmeasurement(models.Model):
         ''' Returns last x hours of data '''
         return self.unix_time >= int(datetime.time())-(3600)
 
+    def as_dict(self):
+        return {
+            "unix_time": float(self.unix_time),
+            "active_power": float(self.active_power),
+            "apparent_power": float(self.apparent_power),
+            "voltage": float(self.voltage)
+        }
+
 
 

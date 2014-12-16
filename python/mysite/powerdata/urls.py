@@ -13,4 +13,5 @@ urlpatterns = patterns('',
     # charts
     url(r'^latest_chart/$', views.latest_chart, name='latest_chart'),
     url(r'^latest_chart/(?P<hours>\d+)$', views.latest_chart, name='latest_chart'),
+    url(r'^livechart/$', views.livechart, name='livechart'),
 )
