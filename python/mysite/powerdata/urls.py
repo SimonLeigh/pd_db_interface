@@ -12,6 +12,7 @@ urlpatterns = patterns('',
     url(r'^latest/$', views.latest, name='latest'),
     # charts
     url(r'^latest_chart/$', views.latest_chart, name='latest_chart'),
-    url(r'^latest_chart/(?P<hours>\d+)$', views.latest_chart, name='latest_chart'),
+    url(r'^latest_chart/(?P<hours>\d+)$', views.latest_chart, name='latest_chart_with_hrs'),
     url(r'^livechart/$', views.livechart, name='livechart'),
+    url(r'^livechart/(?P<last_minutes>\d+)$', views.livechart, name='livechart_with_mins'),
 )

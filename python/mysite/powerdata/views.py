@@ -105,8 +105,9 @@ def latest_chart(request, hours=1):
     return render_to_response('powerdata/linewithfocuschart.html', data)
 
 
-def livechart(request):
+def livechart(request, last_minutes=10):
     # get last minute of data initially
-    initial_data = [obj.as_dict() for obj in SCPMmeasurement.objects.order_by('-unix_time')[:60]]
+    last_minutes = int(last_minutes)
+    initial_data = [obj.as_dict() for obj in reversed(SCPMmeasurement.objects.order_by('-unix_time')[:last_minutes*60])]
     initial_data = json.dumps(initial_data)
     return render(request, 'powerdata/livechart.html', {"my_data": initial_data})

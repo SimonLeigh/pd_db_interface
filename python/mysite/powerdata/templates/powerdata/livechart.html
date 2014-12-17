@@ -9,7 +9,7 @@ svg {
 .line {
   fill: none;
   stroke: #000;
-  stroke-width: 1.5px;
+  stroke-width: 1px;
 }
 
 .axis path,
@@ -18,87 +18,109 @@ svg {
   stroke: #000;
   shape-rendering: crispEdges;
 }
-
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script>
+<script>(function() {
 
+// Set up the variables for the data
 var data = {{ my_data|safe }},
-    n = data.length+1
+    n = data.length-1,
+    duration = 1000
+    now = new Date(data[n-1].unix_time * 1000)
+    //now = new Date(Date.now() - duration)
 
-var margin = {top: 20, right: 20, bottom: 20, left: 40},
+// Set the graph margins
+var margin = {top: 20, right: 20, bottom: 20, left: 60},
     width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    height = 500 - margin.top - margin.bottom,
+    padding = 40;
 
-var x = d3.scale.linear()
-    .domain([data[0].unix_time, data[n - 2].unix_time])
+// Set up the x axis
+var x = d3.time.scale()
+    .domain([now - (n - 2) * duration, now-duration])
     .range([0, width]);
 
 var y = d3.scale.linear()
-    .domain([0, 6000])
+    .domain([d3.min(data, function(d) { return d.apparent_power; })-200, 
+             d3.max(data, function(d) { return d.apparent_power; }) ])
     .range([height, 0]);
 
 var line = d3.svg.line()
-    .x(function(d, i) { return x(d.unix_time); })
+    .interpolate("basis")
+    .x(function(d, i) { return x(now - (n - 1 - i) * duration) + padding+3 ; })
     .y(function(d, i) { return y(d.active_power); });
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("body").append("p").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-  .append("g")
+    .style("margin-left", -margin.left + "px")
+    .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 svg.append("defs").append("clipPath")
     .attr("id", "clip")
-  .append("rect")
+    .append("rect")
     .attr("width", width)
     .attr("height", height);
 
-svg.append("g")
+var axis = svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(0," + y(0) + ")")
-    .call(d3.svg.axis().scale(x).orient("bottom"));
+    .attr("transform", "translate(" + padding +"," + height + ")")
+    .call(x.axis = d3.svg.axis().scale(x).orient("bottom"));
 
-svg.append("g")
-    .attr("class", "y axis")
-    .call(d3.svg.axis().scale(y).orient("left"));
+  svg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(" + padding + ",0)")
+      .call(y.axis = d3.svg.axis().scale(y).ticks(10).orient("left"));
 
 var path = svg.append("g")
     .attr("clip-path", "url(#clip)")
-  .append("path")
+    .append("path")
     .datum(data)
-    .attr("class", "line")
-    .attr("d", line);
+    .attr("class", "line");
 
-tick();
+var transition = d3.select({}).transition()
+    .duration(1000)
+    .ease("linear");
 
-function tick() {
+(function tick() {
+    transition = transition.each(function() {
+        // Update the domains
+        var new_data; // a global
+        now = new Date()
+        x.domain([now - (n - 2) * duration, now - duration]);
+        y.domain([d3.min(data, function(d) { return d.apparent_power; })-200, 
+                  d3.max(data, function(d) { return d.apparent_power; }) ]);
 
-    var new_data; // a global
+        d3.json("/powerdata/latest", function(error, json) {
+            if (error) return console.warn(error);
+            new_data = json;
+            console.log(new_data)
+            // push a new data point onto the back
+            data.push(new_data);
+            // pop the old data point off the front
+            data.shift(); 
 
-    d3.json("/powerdata/latest", function(error, json) {
-      if (error) return console.warn(error);
-      new_data = json;
-      console.log(new_data)
-   // push a new data point onto the back
-   data.push(new_data);
+        });
 
-   // redraw the line, and slide it to the left
-   path
-      .attr("d", line)
-      .attr("transform", null)
-    .transition()
-      .duration(1000)
-      .ease("linear")
-      .attr("transform", "translate(" + x(-1000) + ",0)")
-      .each("end", tick);
+        // redraw the line
+        svg.select(".line")
+            .attr("d", line)
+            .attr("transform", null);
 
-   // pop the old data point off the front
-   data.shift();
-   });
- 
+        // slide the x-axis left
+        axis.call(x.axis);
+        svg.select(".y.axis") // change the y axis
+        .call(y.axis);
 
-}
+        // slide the line left
+        path.transition()
+            .attr("transform", "translate(" + x(now - (n - 1) * duration)+ ")");
 
-</script>
+
+
+   }).transition().each("start", tick);
+})();
+
+})()</script>
