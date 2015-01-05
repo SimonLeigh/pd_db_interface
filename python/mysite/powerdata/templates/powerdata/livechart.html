@@ -67,12 +67,15 @@ svg.append("defs").append("clipPath")
 var axis = svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(" + padding +"," + height + ")")
-    .call(x.axis = d3.svg.axis().scale(x).orient("bottom"));
+    .call(x.axis = d3.svg.axis().scale(x).orient("bottom").tickFormat(d3.time.format("%H:%M")) );
 
   svg.append("g")
       .attr("class", "y axis")
       .attr("transform", "translate(" + padding + ",0)")
-      .call(y.axis = d3.svg.axis().scale(y).ticks(10).orient("left"));
+      .call(y.axis = d3.svg.axis()
+                               .scale(y)
+                               .ticks(10).orient("left") );
+                              // 
 
 var path = svg.append("g")
     .attr("clip-path", "url(#clip)")
